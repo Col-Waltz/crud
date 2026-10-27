@@ -234,6 +234,13 @@ function call.map(vshard_router, func_name, func_args, opts)
 
     local timeout = opts.timeout or const.DEFAULT_VSHARD_CALL_TIMEOUT
 
+    if opts.mode == 'read' and opts.request_timeout ~= nil and opts.request_timeout > timeout then
+        return nil, CallError:new(
+            "request_timeout (%s) must be <= timeout (%s): pass request_timeout <= %s",
+            tostring(opts.request_timeout), tostring(timeout), tostring(timeout)
+        )
+    end
+
     local iter = opts.iter
     if iter == nil then
         iter, err = BaseIterator:new({
@@ -254,6 +261,7 @@ function call.map(vshard_router, func_name, func_args, opts)
     local futures_by_replicasets = {}
     local call_opts = {
         is_async = true,
+        timeout = timeout,
         request_timeout = opts.mode == 'read' and opts.request_timeout or nil,
     }
 
